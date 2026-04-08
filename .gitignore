@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Runtime data
+data/
+logs/
+*.log
+
+# Secrets - NEVER commit these
+config.json
+accounts.json
+proxies.txt
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code / MCP
+.claude/
+claude/
+.mcp.json
+
+# Shell configs (not part of project)
+.bash_profile
+.bashrc
+.gitconfig
+.gitmodules
+.profile
+.ripgreprc
+.zprofile
+.zshrc
+
+# Temp / analysis files
+require_analysis.txt
+target_files.txt
+applications/
+*.bak

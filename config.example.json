@@ -1,0 +1,86 @@
+{
+  "server": {
+    "host": "localhost",
+    "port": 25565,
+    "version": "1.21.1",
+    "password": "your_password_here",
+    "queueTimeoutMs": 300000
+  },
+  "botCount": 3,
+  "autoStart": false,
+  "authMode": "offline",
+  "webPort": 3000,
+  "webPassword": "",
+  "serverProfile": "serverProfiles/default.json",
+  "spawnerHunting": {
+    "searchCenterX": 0,
+    "searchCenterZ": 0,
+    "searchRadius": 2000,
+    "maxDistanceToSpawner": 128,
+    "collectTimeoutMs": 60000,
+    "explorationTickMs": 1000,
+    "maxSpawnerStacksPerBot": 2,
+    "cycleOnFull": true
+  },
+  "delays": {
+    "botSpawnDelayMs": 5000,
+    "reconnectDelayMs": 30000,
+    "maxReconnectDelayMs": 300000
+  },
+  "economy": {
+    "pickaxeCost": 700,
+    "steakCost": 30,
+    "totemCost": 2500
+  },
+  "shop": {
+    "pickaxeSlots": [23, 50, 4, 34],
+    "steakSlots": [4, 25, 34],
+    "totemSlots": [23, 40, 34],
+    "settingsMobSlot": 23,
+    "dailyClaimSlot": 1,
+    "rtpSlot": 11
+  },
+  "survival": {
+    "minHealth": 8,
+    "minFood": 12,
+    "autoEat": true,
+    "afkIntervalMs": 240000,
+    "stuckThresholdTicks": 30,
+    "avoidPlayers": true,
+    "playerAvoidRadius": 30,
+    "selfDefense": true
+  },
+  "coordination": {
+    "enabled": true,
+    "tpaBetweenBots": true
+  },
+  "maintenance": {
+    "restartIntervalHours": 0,
+    "pauseHoursStart": -1,
+    "pauseHoursEnd": -1,
+    "staggerRestartMs": 30000
+  },
+  "hostBot": {
+    "enabled": false,
+    "hunterToHostRatio": 10,
+    "storageIntervalMs": 15000,
+    "spawnerTransferThreshold": 64
+  },
+  "logging": {
+    "level": "info",
+    "toFile": true,
+    "logDir": "./logs"
+  },
+  "proxies": {
+    "file": "./proxies.txt"
+  },
+  "accounts": {
+    "file": "./accounts.json"
+  },
+  "webhooks": {
+    "discordUrl": "",
+    "notifyOnCycle": true,
+    "notifyOnDeath": false,
+    "notifyOnKick": true
+  }
+}

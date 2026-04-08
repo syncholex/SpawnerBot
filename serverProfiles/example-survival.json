@@ -1,0 +1,102 @@
+{
+  "name": "Generic SMP Server (Example)",
+  "version": "1.20.4",
+  "description": "Example profile for a generic survival server with /warp shop, /kit, no queue",
+
+  "login": {
+    "detect_pattern": "/login|please login|log in",
+    "command": "/login {password}",
+    "success_pattern": "successfully|logged in|welcome",
+    "proactive_delay_ms": 2000
+  },
+
+  "register": {
+    "detect_pattern": "/register|please register",
+    "command": "/register {password} {password}",
+    "success_pattern": "successfully|registered"
+  },
+
+  "startup_sequence": [
+    {
+      "type": "chat",
+      "command": "/kit starter",
+      "comment": "Claim starter kit"
+    },
+    {
+      "type": "wait",
+      "ms": 2000
+    },
+    {
+      "type": "gui_click_item",
+      "command": "/warp shop",
+      "item": ["diamond_pickaxe", "pickaxe"],
+      "wait_for_window": true,
+      "optional": true
+    },
+    {
+      "type": "chat",
+      "command": "/sethome",
+      "comment": "Save spawn as home"
+    },
+    {
+      "type": "wait",
+      "ms": 1000
+    }
+  ],
+
+  "death_recovery_sequence": [
+    {
+      "type": "wait",
+      "ms": 3000
+    },
+    {
+      "type": "chat",
+      "command": "/home"
+    },
+    {
+      "type": "wait",
+      "ms": 3000
+    },
+    {
+      "type": "chat",
+      "command": "/kit starter",
+      "optional": true
+    }
+  ],
+
+  "shopping": {
+    "open_command": "/warp shop",
+    "auto_explore": true,
+    "items": {
+      "pickaxe": {
+        "keywords": ["diamond_pickaxe", "iron_pickaxe", "pickaxe"],
+        "max_price": 500,
+        "priority": 1
+      },
+      "food": {
+        "keywords": ["cooked_beef", "bread", "golden_carrot", "steak"],
+        "max_price": 50,
+        "default_quantity": 64,
+        "min_quantity": 10,
+        "priority": 2
+      }
+    }
+  },
+
+  "commands": {
+    "home": "/home",
+    "sethome": "/sethome",
+    "balance": "/balance",
+    "sell": "/sell all",
+    "disposal": "/disposal"
+  },
+
+  "survival": {
+    "dangerous_blocks": ["lava", "fire", "cactus"],
+    "min_y": -60,
+    "avoid_player_logout_ms": 1800000,
+    "flee_mob_distance": 8,
+    "fight_back_health": 5,
+    "fight_back_distance": 2
+  }
+}

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCBOT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Exo+2:wght@400;600;700;900&display=swap');
+:root{--bg:#08090d;--surface:#10121a;--surface2:#181c28;--surface3:#1e2235;--border:#252a3a;--text:#cdd5e0;--text2:#636d83;--text3:#3d4455;--accent:#ff3355;--accent-dim:#331018;--green:#00e676;--green-dim:#0a2e18;--blue:#40a0ff;--yellow:#ffab00;--purple:#b060ff;--cyan:#00e5ff;--red:#ff4444}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;display:flex;height:100vh;overflow:hidden}
+::selection{background:var(--accent);color:#fff}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:14px;color:#fff}
+.logo-text{font-weight:700;font-size:15px;letter-spacing:1px}.logo-sub{font-size:9px;color:var(--text2);letter-spacing:2px;text-transform:uppercase}
+#sidebar nav{padding:8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:2px;letter-spacing:.3px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+#main{flex:1;overflow-y:auto;padding:28px;position:relative}
+.page{display:none}.page.active{display:block}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:20px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px}
+.stat-label{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat-val{font-family:'JetBrains Mono';font-size:22px;font-weight:700}
+.stat-val.c-green{color:var(--green)}.stat-val.c-red{color:var(--accent)}.stat-val.c-blue{color:var(--blue)}.stat-val.c-yellow{color:var(--yellow)}.stat-val.c-purple{color:var(--purple)}
+.bot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.bot-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;transition:border-color .2s}.bot-card:hover{border-color:var(--text3)}
+.bot-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bot-name{font-weight:700;font-size:13px;font-family:'JetBrains Mono'}
+.bot-meta{font-size:11px;color:var(--text2);line-height:1.8}.bot-meta b{color:var(--text);font-weight:600}
+.badge{font-size:9px;padding:3px 8px;border-radius:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge.hunting,.badge.online,.badge.hosting{background:var(--green-dim);color:var(--green)}.badge.disconnected,.badge.stopped,.badge.offline{background:#1a1520;color:var(--text2)}
+.badge.connecting,.badge.initializing{background:#1a1a10;color:var(--yellow)}.badge.dead,.badge.kicked,.badge.failed{background:var(--accent-dim);color:var(--accent)}.badge.cycled{background:#1a0a2e;color:var(--purple)}.badge.avoiding_players{background:#1a1a0a;color:var(--yellow)}
+.btns{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.btn{padding:5px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:10px;font-family:'Exo 2';font-weight:600;cursor:pointer;transition:all .12s}.btn:hover{border-color:var(--text2);color:#fff}
+.btn.danger{border-color:#331018;color:var(--accent)}.btn.danger:hover{background:var(--accent);color:#fff}
+.btn.go{border-color:var(--green-dim);color:var(--green)}.btn.go:hover{background:var(--green);color:#000}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{opacity:.85}
+.btn.sm{padding:3px 7px;font-size:9px}
+.control-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.control-bar .sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.control-bar label{font-size:11px;color:var(--text2);margin-right:4px}
+.control-bar input,.control-bar select{padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:11px}
+.username-preview{font-family:'JetBrains Mono';font-size:11px;color:var(--cyan);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 10px;max-width:500px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--text2);font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:1px;cursor:pointer;user-select:none}th:hover{color:var(--text)}
+tr:hover td{background:var(--surface2)}
+.tag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700}.tag.found{background:var(--accent-dim);color:var(--accent)}.tag.mined{background:var(--green-dim);color:var(--green)}
+.type-tag{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:var(--surface2);color:var(--cyan)}
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:11px}
+canvas#mapCanvas{display:block;width:100%;height:calc(100vh - 160px);cursor:crosshair;background:#06070a;border-radius:8px;border:1px solid var(--border)}
+.map-ctrls{display:flex;gap:5px;margin-bottom:10px;align-items:center}.map-ctrls span{font-size:10px;color:var(--text2);margin-left:8px}
+.cfg-form{max-width:600px}
+.cfg-section{font-size:13px;font-weight:700;color:var(--accent);margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.field{margin-bottom:14px}.field label{display:block;font-size:10px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.field input,.field select{width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:12px}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.log-box{background:#050608;border:1px solid var(--border);border-radius:8px;padding:12px;height:calc(100vh - 200px);overflow-y:auto;font-family:'JetBrains Mono';font-size:10px;line-height:1.7}
+.log-line{color:var(--text2)}.log-line.info{color:var(--blue)}.log-line.warn{color:var(--yellow)}.log-line.error{color:var(--red)}
+.tab-row{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;background:var(--surface);border:1px solid var(--border)}.tab.active{color:var(--accent);border-color:var(--accent)}
+.cmd-input{display:flex;gap:6px;margin-top:10px}.cmd-input input{flex:1;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:11px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:16px;margin-bottom:12px}.inv-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px;font-family:'JetBrains Mono'}.inv-item:last-child{border:none}
+.inv-name{flex:1}.inv-count{color:var(--yellow);margin-right:12px}.inv-bar{width:60px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}.inv-bar-fill{height:100%;border-radius:3px}
+.export-bar{display:flex;gap:8px;margin-bottom:16px}
+.cd-text{font-size:9px;color:var(--text3);margin-top:3px}.cd-text.ready{color:var(--green)}
+.hp-bar{width:80px;height:5px;background:var(--surface2);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px}
+.hp-fill{height:100%;border-radius:3px;transition:width .3s}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:20px}
+.chart-box canvas{width:100%;height:200px}
+.login-bg{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:320px;text-align:center}
+.login-box h2{margin-bottom:20px;font-size:18px}.login-box input{width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'JetBrains Mono';font-size:13px;margin-bottom:12px}
+#toasts{position:fixed;top:16px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 16px;border-radius:8px;font-size:11px;font-weight:600;font-family:'JetBrains Mono';max-width:350px;opacity:0;transform:translateX(20px);transition:all .3s;pointer-events:auto}
+.toast.show{opacity:1;transform:translateX(0)}.toast.info{background:#102030;border:1px solid var(--blue);color:var(--blue)}
+.toast.warn{background:#1a1a0a;border:1px solid var(--yellow);color:var(--yellow)}
+.toast.error{background:#1a0a0a;border:1px solid var(--accent);color:var(--accent)}
+.toast.success{background:#0a1a0a;border:1px solid var(--green);color:var(--green)}
+@keyframes staffPulse{0%,100%{opacity:1}50%{opacity:.7}}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+<div id="loginScreen" class="login-bg" style="display:none">
+  <div class="login-box"><h2>MCBOT</h2><input id="loginPw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"><button class="btn primary" onclick="doLogin()" style="width:100%;padding:10px">Login</button></div>
+</div>
+<div id="sidebar">
+  <div class="logo"><div class="logo-mark">M</div><div><div class="logo-text">MCBOT</div><div class="logo-sub">spawner miner</div></div></div>
+  <nav>
+    <div class="nav-item active" data-page="dashboard">&#9632; Dashboard</div>
+    <div class="nav-item" data-page="bots">&#9654; Bot Control</div>
+    <div class="nav-item" data-page="map">&#9673; Map</div>
+    <div class="nav-item" data-page="spawners">&#9670; Spawners</div>
+    <div class="nav-item" data-page="economy">&#36; Economy</div>
+    <div class="nav-item" data-page="config">&#9881; Config</div>
+    <div class="nav-item" data-page="accounts">&#9786; Accounts</div>
+    <div class="nav-item" data-page="scheduler">&#9200; Scheduler</div>
+    <div class="nav-item" data-page="logs">&#9776; Logs</div>
+  </nav>
+</div>
+<div id="main">
+<div id="pg-dashboard" class="page active">
+  <div id="staffBanner" style="display:none;background:linear-gradient(90deg,#4a0000,#6a0000);color:#ff4444;padding:10px 16px;font-family:'JetBrains Mono';font-size:12px;font-weight:700;letter-spacing:1px;border-radius:6px;margin-bottom:12px;text-align:center;animation:staffPulse 2s ease-in-out infinite"></div>
+  <div class="page-title">Dashboard</div>
+  <div class="chart-box"><canvas id="chartCanvas"></canvas></div>
+  <div class="stats-row" id="dashStats"></div>
+  <div id="typeBreakdown" style="margin-bottom:20px"></div>
+  <div class="page-title" style="font-size:16px;margin-top:8px">Active Bots</div>
+  <div class="bot-grid" id="dashBots"></div>
+  <div class="page-title" style="font-size:16px;margin-top:16px">Server Chat</div>
+  <div class="log-box" id="chatBox" style="height:180px;margin-top:4px"></div>
+</div>
+<div id="pg-bots" class="page">
+  <div class="page-title">Bot Control</div>
+  <div class="control-bar">
+    <button class="btn go" onclick="startAll()">Start All</button>
+    <button class="btn danger" onclick="stopAll()">Stop All</button>
+    <div class="sep"></div>
+    <label>Bots:</label><input id="botCount" type="number" value="3" min="1" max="50" style="width:50px">
+    <button class="btn" onclick="generateNames()">Generate Names</button>
+    <button class="btn primary" onclick="startAll()">Launch</button>
+    <div class="sep"></div>
+    <button class="btn" onclick="bulkAction('daily')">Daily All</button>
+    <button class="btn" onclick="bulkAction('rtp')">RTP All</button>
+    <button class="btn" onclick="bulkAction('inventory')">Clean Inv All</button>
+    <div class="sep"></div>
+    <div class="username-preview" id="namePreview">No names generated yet</div>
+  </div>
+  <div class="bot-grid" id="botCards"></div>
+</div>
+<div id="pg-map" class="page">
+  <div class="page-title">Spawner Map</div>
+  <div class="map-ctrls">
+    <button class="btn" onclick="mapZoom(1.5)">+</button><button class="btn" onclick="mapZoom(.67)">-</button>
+    <button class="btn" onclick="mapReset()">Reset</button><button class="btn go" onclick="mapCenter()">Center</button>
+    <label style="font-size:10px;color:var(--text2);margin-left:12px"><input type="checkbox" id="showChunks" onchange="renderMap()"> Chunks</label>
+    <span style="font-size:10px;color:var(--text2);margin-left:12px"><span style="color:#ff3355">&#9679;</span> Found <span style="color:#00e676">&#9679;</span> Mined <span style="color:#b060ff">&#9679;</span> Bot</span>
+    <span>Drag to pan / scroll to zoom</span>
+  </div>
+  <canvas id="mapCanvas"></canvas>
+</div>
+<div id="pg-spawners" class="page">
+  <div class="page-title">Spawner Database</div>
+  <div class="export-bar"><button class="btn" onclick="exportCSV()">Export CSV</button><button class="btn" onclick="exportJSON()">Export JSON</button></div>
+  <div class="filter-bar">
+    <input id="spFilter" placeholder="Search coords/type..." oninput="renderSpawners()" style="width:200px">
+    <select id="spStatusFilter" onchange="renderSpawners()"><option value="">All Status</option><option value="found">Found</option><option value="mined">Mined</option></select>
+    <select id="spTypeFilter" onchange="renderSpawners()"><option value="">All Types</option></select>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <table><thead><tr><th onclick="sortSpawners('status')">Status</th><th onclick="sortSpawners('type')">Type</th><th onclick="sortSpawners('x')">X</th><th onclick="sortSpawners('y')">Y</th><th onclick="sortSpawners('z')">Z</th><th onclick="sortSpawners('foundBy')">Found By</th><th onclick="sortSpawners('foundAt')">Time</th><th></th></tr></thead>
+    <tbody id="spawnerTbl"></tbody></table>
+  </div>
+</div>
+<div id="pg-economy" class="page">
+  <div class="page-title">Economy</div>
+  <div class="stats-row" id="econStats"></div>
+  <div class="bot-grid" id="econCards"></div>
+</div>
+<div id="pg-config" class="page">
+  <div class="page-title">Configuration</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px" class="cfg-form" id="cfgForm"></div>
+</div>
+<div id="pg-accounts" class="page">
+  <div class="page-title">Accounts</div>
+  <div class="control-bar">
+    <button class="btn primary" onclick="addAccount()">+ Add Account</button>
+    <button class="btn" onclick="saveAccounts()">Save All</button>
+    <span style="font-size:10px;color:var(--text2);margin-left:8px">For Microsoft auth mode</span>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <table><thead><tr><th>#</th><th>Email</th><th>Password</th><th></th></tr></thead>
+    <tbody id="accountsTbl"></tbody></table>
+  </div>
+</div>
+<div id="pg-scheduler" class="page">
+  <div class="page-title">Scheduler & Metrics</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:12px">Smart Scheduler</div>
+      <div id="schedulerInfo" style="font-size:11px;color:var(--text2)">Loading...</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:12px">Performance Leaderboard</div>
+      <div id="leaderboard" style="font-size:11px;color:var(--text2)">Loading...</div>
+    </div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px">
+    <div style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:12px">Proxy Health</div>
+    <div class="btns" style="margin-bottom:10px"><button class="btn" onclick="testProxies()">Test All Proxies</button></div>
+    <div id="proxyHealth" style="font-size:11px;color:var(--text2)">No proxies configured</div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px">
+    <div style="font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:12px">Scheduled Commands</div>
+    <div class="control-bar" style="margin-bottom:10px;border:none;padding:0">
+      <input id="schedCron" placeholder="*/5 * * * *" style="width:140px;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:11px">
+      <input id="schedCmd" placeholder="/command..." style="width:200px;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:11px">
+      <select id="schedBot" style="padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px"><option value="">All Bots</option></select>
+      <button class="btn primary" onclick="addSchedule()">Add</button>
+    </div>
+    <div id="schedulesList" style="font-size:11px"></div>
+  </div>
+</div>
+<div id="pg-logs" class="page">
+  <div class="page-title">Logs</div>
+  <div class="tab-row" id="logTabs"></div>
+  <div class="log-box" id="logBox"></div>
+</div>
+</div>
+<div id="modal" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalContent"></div></div>
+<script>
+let D={bots:{},spawners:[],stats:{},config:{},cooldowns:{daily:{},rtp:{}}};
+let page='dashboard',names=[],chunks=[],timeSeries=[];
+let spSort={field:'foundAt',dir:-1};
+let mapS={cx:0,cz:0,sc:2,drag:false,ox:0,oy:0,ocx:0,ocz:0};
+let mc,mx;
+
+// --- Login ---
+function checkLogin(){
+  if(!D.config.webPassword){document.getElementById('loginScreen').style.display='none';return;}
+  if(sessionStorage.getItem('mcbot_token')===D.config.webPassword){document.getElementById('loginScreen').style.display='none';return;}
+  document.getElementById('loginScreen').style.display='flex';
+}
+function doLogin(){
+  const pw=document.getElementById('loginPw').value;
+  if(pw===D.config.webPassword){sessionStorage.setItem('mcbot_token',pw);document.getElementById('loginScreen').style.display='none';}
+  else document.getElementById('loginPw').style.borderColor='var(--red)';
+}
+
+// --- Nav ---
+document.querySelectorAll('.nav-item').forEach(n=>{n.onclick=()=>showPage(n.dataset.page);});
+function showPage(p){
+  page=p;
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===p));
+  document.getElementById('pg-'+p).classList.add('active');
+  if(p==='map')requestAnimationFrame(resizeMap);
+  render();
+}
+
+async function api(path,m='GET',body){
+  const h={'Content-Type':'application/json'};
+  const token=sessionStorage.getItem('mcbot_token');if(token)h['Authorization']='Bearer '+token;
+  const o={method:m,headers:h};if(body)o.body=JSON.stringify(body);
+  try{const r=await fetch('/api/'+path,o);return await r.json();}catch{return null;}
+}
+
+// --- SSE ---
+let es;
+const chatMessages=[];
+function initSSE(){
+  es=new EventSource('/sse');
+  es.onmessage=(e)=>{try{const d=JSON.parse(e.data);
+    if(d.type==='status'&&D.bots[d.index]){
+      const old=D.bots[d.index];D.bots[d.index]={...old,...d.data};
+      // Toast on status change
+      if(old&&old.status!==d.data.status){
+        const u=d.data.username||('Bot-'+d.index);
+        if(d.data.status==='dead')showToast(u+' died!','error');
+        else if(d.data.status==='kicked')showToast(u+' kicked','warn');
+        else if(d.data.status==='avoiding_players')showToast(u+' avoiding players','warn');
+        else if(d.data.status==='cycled')showToast(u+' cycled out','success');
+      }
+    }else if(d.type==='chat'){
+      chatMessages.push({bot:d.username||('Bot-'+d.botIndex),text:d.text,time:new Date().toLocaleTimeString()});
+      if(chatMessages.length>200)chatMessages.shift();renderChat();
+    }else if(d.type==='toast'){showToast(d.message,d.level||'info');}
+  }catch{}};
+}
+function renderChat(){
+  const box=document.getElementById('chatBox');if(!box)return;
+  box.innerHTML=chatMessages.slice(-80).map(m=>`<div class="log-line" style="color:var(--text2)"><span style="color:var(--cyan)">[${m.bot}]</span> ${m.text}</div>`).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+async function refresh(){
+  try{
+    const[stats,spawners,bots,config,cooldowns,chunksData,ts,staffData]=await Promise.all([
+      api('stats'),api('spawners'),api('bots'),api('config'),api('cooldowns'),api('chunks'),api('timeseries'),api('staff')
+    ]);
+    D={bots:bots||{},spawners:spawners||[],stats:stats||{},config:config||{},cooldowns:cooldowns||{daily:{},rtp:{}}};
+    chunks=chunksData||[];timeSeries=ts||[];
+    // Staff alert banner
+    const staffBanner=document.getElementById('staffBanner');
+    if(staffData&&staffData.isStaffOnline){
+      staffBanner.style.display='block';staffBanner.textContent='STAFF ONLINE: '+staffData.staffOnline.join(', ');
+    }else if(staffBanner){staffBanner.style.display='none';}
+    checkLogin();
+    // Populate type filter
+    const types=[...new Set(spawners?.map(s=>s.type||'unknown')||[])];
+    const tf=document.getElementById('spTypeFilter');
+    const cur=tf.value;tf.innerHTML='<option value="">All Types</option>'+types.map(t=>`<option value="${t}">${t}</option>`).join('');tf.value=cur;
+    // Load accounts if on accounts page
+    if(page==='accounts'){
+      const accData=await api('accounts');accounts=accData||[];
+    }
+  }catch{}
+  render();
+}
+
+function render(){
+  if(!document.getElementById('loginScreen')||document.getElementById('loginScreen').style.display==='flex')return;
+  if(page==='dashboard')renderDash();else if(page==='bots')renderBots();else if(page==='map')renderMap();
+  else if(page==='spawners')renderSpawners();else if(page==='economy')renderEcon();else if(page==='config')renderCfg();
+  else if(page==='accounts')renderAccounts();else if(page==='scheduler')renderScheduler();else if(page==='logs')renderLogs();
+}
+
+// --- Chart ---
+function drawChart(){
+  const canvas=document.getElementById('chartCanvas');if(!canvas||!timeSeries.length)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.parentElement.clientWidth-32;canvas.height=200;
+  ctx.fillStyle='transparent';ctx.fillRect(0,0,canvas.width,canvas.height);
+  const pts=timeSeries.slice(-60);
+  if(pts.length<2)return;
+  const maxMined=Math.max(...pts.map(p=>p.mined),1);
+  const w=canvas.width,h=canvas.height;
+  // Mined line
+  ctx.beginPath();ctx.strokeStyle='#00e676';ctx.lineWidth=2;
+  pts.forEach((p,i)=>{const x=(i/(pts.length-1))*w;const y=h-((p.mined/maxMined)*h*0.9)-10;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+  ctx.stroke();
+  // Found line
+  const maxFound=Math.max(...pts.map(p=>p.found),1);
+  ctx.beginPath();ctx.strokeStyle='#ff3355';ctx.lineWidth=2;
+  pts.forEach((p,i)=>{const x=(i/(pts.length-1))*w;const y=h-((p.found/maxFound)*h*0.9)-10;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+  ctx.stroke();
+  // Legend
+  ctx.font='10px JetBrains Mono';ctx.fillStyle='#00e676';ctx.fillText('Mined',10,14);ctx.fillStyle='#ff3355';ctx.fillText('Found',60,14);
+}
+
+// --- Dashboard ---
+function renderDash(){
+  const bots=Object.entries(D.bots);
+  const on=bots.filter(([_,b])=>['hunting','hosting','online','initializing','connecting'].includes(b.status)).length;
+  const hosts=bots.filter(([_,b])=>b.isHost).length;
+  const bal=bots.reduce((s,[_,b])=>s+(b.balance||0),0);
+  const sp=bots.reduce((s,[_,b])=>s+(b.spawnerCount||0),0);
+  const totalStored=bots.filter(([_,b])=>b.isHost).reduce((s,[_,b])=>s+(b.hostStats?.totalStored||0),0);
+  const eff=D.stats.efficiency||{};
+  document.getElementById('dashStats').innerHTML=[
+    sc('Online',on+'/'+bots.length,'c-blue'),sc('Hosts',hosts,'c-purple'),
+    sc('Found',D.stats.found||0,'c-red'),sc('Mined',D.stats.mined||0,'c-green'),
+    sc('Balance','$'+bal.toLocaleString(),'c-yellow'),sc('Held',sp,'c-purple'),
+    sc('Stored',totalStored,'c-green'),sc('Chunks',D.stats.exploredChunks||0,'c-blue'),
+    sc('Mined/hr',eff.sph1h||0,'c-green'),sc('24h',eff.sph24h||0,'c-yellow'),
+  ].join('');
+  const bt=D.stats.byType||{};
+  const types=Object.entries(bt);
+  if(types.length){let h='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';types.forEach(([t,v])=>{h+=`<div class="stat" style="padding:8px 12px"><div class="stat-label">${t}</div><div style="font-family:JetBrains Mono;font-size:13px;font-weight:700"><span style="color:var(--accent)">${v.found}</span>/<span style="color:var(--green)">${v.mined}</span></div></div>`;});document.getElementById('typeBreakdown').innerHTML=h+'</div>';}
+  document.getElementById('dashBots').innerHTML=bots.map(([i,b])=>botCard(i,b,false)).join('');
+  drawChart();
+}
+function sc(l,v,c){return `<div class="stat"><div class="stat-label">${l}</div><div class="stat-val ${c}">${v}</div></div>`;}
+
+// --- Bot Control ---
+async function generateNames(){const c=parseInt(document.getElementById('botCount').value)||3;names=await api('usernames?count='+c)||[];document.getElementById('namePreview').textContent=names.join('  /  ');}
+async function startAll(){const c=parseInt(document.getElementById('botCount').value)||3;if(!names.length)await generateNames();for(let i=0;i<c;i++){const n=D.config.authMode==='offline'?names[i]:undefined;await api('bot/start','POST',{index:i,username:n});if(i<c-1)await new Promise(r=>setTimeout(r,D.config.delays?.botSpawnDelayMs||3000));}refresh();}
+async function stopAll(){await api('stop-all','POST');refresh();}
+async function startBot(i){const n=D.config.authMode==='offline'?names[i]:undefined;await api('bot/start','POST',{index:i,username:n});refresh();}
+async function stopBot(i){await api('bot/'+i+'/stop','POST');refresh();}
+async function botCmd(i,a,b){const btn=event?.target;if(btn){btn.disabled=true;setTimeout(()=>btn.disabled=false,3000);}return api('bot/'+i+'/'+a,'POST',b);}
+async function bulkAction(action){showToast(`Running ${action} on all bots...`,'info');await api('bots/action','POST',{action});showToast(`${action} complete`,'success');refresh();}
+
+function renderBots(){
+  const bots=Object.entries(D.bots);
+  const exp=parseInt(document.getElementById('botCount')?.value||D.config.botCount||3);
+  let html='';
+  for(let i=0;i<Math.max(exp,Object.keys(D.bots).length);i++){
+    const b=D.bots[i];
+    if(b)html+=botCard(i,b,true);
+    else html+=`<div class="bot-card" style="border-style:dashed;opacity:.5"><div class="bot-head"><div class="bot-name">Slot ${i}</div><span class="badge offline">empty</span></div><div class="bot-meta">Not started</div><div class="btns"><button class="btn go" onclick="startBot(${i})">Start</button>${names[i]?`<span style="font-size:10px;color:var(--cyan);font-family:'JetBrains Mono';padding:4px">${names[i]}</span>`:''}</div></div>`;
+  }
+  document.getElementById('botCards').innerHTML=html;
+}
+
+function hpBar(val,max,color){const pct=Math.round((val/max)*100);return `<span class="hp-bar"><span class="hp-fill" style="width:${pct}%;background:${color}"></span></span>`;}
+function fmtTime(s){if(!s)return'0m';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h>0?h+'h '+m+'m':m+'m';}
+
+function botCard(i,b,full){
+  const pos=b.position,st=b.stats||{};
+  const isHost=b.isHost;
+  const sClass=b.status==='hunting'||b.status==='hosting'||b.status==='online'?'hunting':b.status==='initializing'||b.status==='connecting'?'initializing':b.status==='dead'||b.status==='kicked'||b.status==='failed'?'dead':b.status==='cycled'?'cycled':b.status==='avoiding_players'?'avoiding_players':'offline';
+  const dTs=D.cooldowns.daily?.[i],rTs=D.cooldowns.rtp?.[i];
+  const dR=!dTs||Date.now()-dTs>=86400000,rR=!rTs||Date.now()-rTs>=300000;
+  const fmtCd=(ts,cd)=>{if(!ts)return'ready';const r=cd-(Date.now()-ts);return r<=0?'ready':Math.floor(r/60000)+'m';};
+  const hp=b.health!=null?b.health:20,fd=b.food!=null?b.food:20;
+  const hostTag=isHost?'<span style="color:var(--accent);font-size:10px;margin-left:6px">[HOST]</span>':'';
+  let metaHtml='';
+  if(isHost){
+    const hs=b.hostStats||{};
+    metaHtml=`Balance: <b>$${(b.balance||0).toLocaleString()}</b> | Uptime: <b>${fmtTime(b.uptime||0)}</b><br>
+      Loose Spawners: <b style="color:var(--yellow)">${hs.looseSpawners||0}</b> | In Shulkers: <b style="color:var(--accent)">${hs.shulkerBoxes||0}</b> boxes<br>
+      Total Stored: <b style="color:var(--green)">${hs.totalStored||0}</b> | Hunters: <b>${(hs.assignedHunters||[]).length}</b><br>
+      Pos: <b>${pos?pos.x+', '+pos.y+', '+pos.z:'---'}</b>`;
+  }else{
+    metaHtml=`Balance: <b>$${(b.balance||0).toLocaleString()}</b> | Spawners: <b style="color:var(--purple)">${b.spawnerCount||0}</b> | Uptime: <b>${fmtTime(b.uptime||0)}</b>${b.inventoryFull?' <span style="color:var(--red);font-size:9px">[INV FULL]</span>':''}<br>
+      Pos: <b>${pos?pos.x+', '+pos.y+', '+pos.z:'---'}</b><br>
+      HP: ${hp}${hpBar(hp,20,'var(--green)')} | Food: ${fd}${hpBar(fd,20,'var(--yellow)')} | XP: <b>Lv${b.xpLevel||0}</b><br>
+      Found: <b style="color:var(--accent)">${st.found||0}</b> | Mined: <b style="color:var(--green)">${st.collected||0}</b> | Failed: <b style="color:var(--red)">${st.failed||0}</b>`;
+  }
+  let html=`<div class="bot-card" style="${isHost?'border-color:var(--accent);background:linear-gradient(135deg,rgba(6,7,10,.97),rgba(20,15,40,.97))':''}"><div class="bot-head"><div class="bot-name">${b.username||'Bot-'+i}${hostTag}</div><span class="badge ${sClass}">${b.status||'unknown'}</span></div>
+    <div class="bot-meta">${metaHtml}</div>
+    <div class="cd-text ${dR?'ready':''}">Daily: ${fmtCd(dTs,86400000)} | RTP: ${fmtCd(rTs,300000)}</div>`;
+  if(full){
+    if(isHost){
+      html+=`<div class="btns">
+        <button class="btn" onclick="botCmd(${i},'inventory')">Clean Inv</button>
+        <button class="btn sm" onclick="showInventory(${i})">Inv</button><button class="btn danger" onclick="stopBot(${i})">Stop</button>
+      </div><div class="cmd-input"><input id="cmd-${i}" placeholder="/command..." onkeydown="if(event.key==='Enter')sendCmd(${i})"><button class="btn" onclick="sendCmd(${i})">Send</button></div>`;
+    }else{
+      html+=`<div class="btns">
+        <button class="btn go" onclick="botCmd(${i},'daily')">Daily</button><button class="btn go" onclick="botCmd(${i},'rtp')">RTP</button>
+        <button class="btn" onclick="botCmd(${i},'buy/pickaxe')">Pickaxe</button><button class="btn" onclick="botCmd(${i},'buy/steak',{count:10})">10x Steak</button>
+        <button class="btn" onclick="botCmd(${i},'buy/totem')">Totem</button><button class="btn" onclick="botCmd(${i},'inventory')">Clean Inv</button>
+        <button class="btn sm" onclick="showInventory(${i})">Inv</button><button class="btn danger" onclick="stopBot(${i})">Stop</button>
+      </div><div class="cmd-input"><input id="cmd-${i}" placeholder="/command..." onkeydown="if(event.key==='Enter')sendCmd(${i})"><button class="btn" onclick="sendCmd(${i})">Send</button></div>`;
+    }
+  }
+  html+=`</div>`;return html;
+}
+
+async function sendCmd(i){const inp=document.getElementById('cmd-'+i);if(!inp||!inp.value)return;await api('bot/'+i+'/command','POST',{command:inp.value});inp.value='';}
+
+// --- Inventory Modal ---
+async function showInventory(i){
+  const items=await api('bot/'+i+'/inventory');
+  if(!items||!items.length){showModal('<h3>Inventory: Bot-'+i+'</h3><p style="color:var(--text2)">No items or bot offline</p>');return;}
+  let html='<h3>Inventory: Bot-'+i+'</h3><div style="margin-top:12px">';
+  items.sort((a,b)=>a.slot-b.slot);
+  items.forEach(item=>{
+    let c='var(--text2)';
+    if(item.name.includes('spawner'))c='var(--accent)';else if(item.name.includes('pickaxe')||item.name.includes('sword'))c='var(--blue)';
+    else if(item.name.includes('cooked')||item.name.includes('bread')||item.name.includes('steak'))c='var(--yellow)';
+    else if(item.name.includes('totem')||item.name.includes('armor')||item.name.includes('helmet')||item.name.includes('chestplate'))c='var(--green)';
+    html+=`<div class="inv-item"><span class="inv-name" style="color:${c}">${item.name.replace(/_/g,' ')}</span><span class="inv-count">x${item.count}</span>`;
+    if(item.maxDurability&&item.durability!==null){const pct=Math.round(item.durability/item.maxDurability*100);const bc=pct>50?'var(--green)':pct>20?'var(--yellow)':'var(--red)';html+=`<div class="inv-bar"><div class="inv-bar-fill" style="width:${pct}%;background:${bc}"></div></div>`;}
+    html+=`</div>`;
+  });
+  html+='</div>';showModal(html);
+}
+function showModal(h){document.getElementById('modalContent').innerHTML=h;document.getElementById('modal').style.display='flex';}
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+// --- Map ---
+function initMap(){
+  mc=document.getElementById('mapCanvas');mx=mc.getContext('2d');
+  mc.addEventListener('mousedown',e=>{mapS.drag=true;mapS.ox=e.clientX;mapS.oy=e.clientY;mapS.ocx=mapS.cx;mapS.ocz=mapS.cz;});
+  mc.addEventListener('mousemove',e=>{if(mapS.drag){mapS.cx=mapS.ocx-(e.clientX-mapS.ox)/mapS.sc;mapS.cz=mapS.ocz-(e.clientY-mapS.oy)/mapS.sc;renderMap();}});
+  mc.addEventListener('mouseup',()=>mapS.drag=false);mc.addEventListener('mouseleave',()=>mapS.drag=false);
+  mc.addEventListener('wheel',e=>{e.preventDefault();mapS.sc=Math.max(.05,Math.min(20,mapS.sc*(e.deltaY>0?.8:1.25)));renderMap();},{passive:false});
+}
+function resizeMap(){if(!mc)return;mc.width=mc.parentElement.clientWidth;mc.height=window.innerHeight-160;renderMap();}
+function mapZoom(f){mapS.sc=Math.max(.05,Math.min(20,mapS.sc*f));renderMap();}
+function mapReset(){mapS.cx=0;mapS.cz=0;mapS.sc=2;renderMap();}
+function mapCenter(){if(!D.spawners.length)return;let x=0,z=0;D.spawners.forEach(s=>{x+=s.x;z+=s.z;});mapS.cx=x/D.spawners.length;mapS.cz=z/D.spawners.length;renderMap();}
+function w2s(wx,wz){return{x:(wx-mapS.cx)*mapS.sc+mc.width/2,y:(wz-mapS.cz)*mapS.sc+mc.height/2};}
+function renderMap(){
+  if(!mx||!mc)return;const c=mx;
+  c.fillStyle='#06070a';c.fillRect(0,0,mc.width,mc.height);
+  if(document.getElementById('showChunks')?.checked&&chunks.length){
+    c.fillStyle='rgba(0,230,118,0.06)';
+    chunks.forEach(ch=>{const p1=w2s(ch.x*16,ch.z*16);const p2=w2s((ch.x+1)*16,(ch.z+1)*16);const w=p2.x-p1.x,h=p2.y-p1.y;if(p1.x+w>0&&p1.x<mc.width&&p1.y+h>0&&p1.y<mc.height)c.fillRect(p1.x,p1.y,w,h);});
+  }
+  const gs=mapS.sc>=1?16:mapS.sc>=.25?64:256;c.strokeStyle='#0e1020';c.lineWidth=.5;
+  for(let w=-10000;w<10000;w+=gs){const p=w2s(w,0);if(p.x<0||p.x>mc.width)continue;c.beginPath();c.moveTo(p.x,0);c.lineTo(p.x,mc.height);c.stroke();}
+  for(let w=-10000;w<10000;w+=gs){const p=w2s(0,w);if(p.y<0||p.y>mc.height)continue;c.beginPath();c.moveTo(0,p.y);c.lineTo(mc.width,p.y);c.stroke();}
+  const o=w2s(0,0);c.strokeStyle='#151830';c.lineWidth=1;c.beginPath();c.moveTo(o.x,0);c.lineTo(o.x,mc.height);c.stroke();c.beginPath();c.moveTo(0,o.y);c.lineTo(mc.width,o.y);c.stroke();
+  D.spawners.forEach(s=>{
+    const p=w2s(s.x,s.z);if(p.x<-20||p.x>mc.width+20||p.y<-20||p.y>mc.height+20)return;
+    const r=Math.max(3,5*Math.sqrt(mapS.sc));c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);c.fillStyle=s.status==='mined'?'#00e676':'#ff3355';c.fill();
+    if(mapS.sc>1.5){c.fillStyle='#fff';c.font='8px JetBrains Mono';c.textAlign='center';const lb=s.type&&s.type!=='unknown'?s.type+' '+s.x+','+s.y+','+s.z:s.x+','+s.y+','+s.z;c.fillText(lb,p.x,p.y-r-3);}
+  });
+  // Draw bot position trails
+  Object.entries(D.bots).forEach(([i,b])=>{
+    const trail=b.trail||[];
+    if(trail.length<2)return;
+    c.beginPath();c.strokeStyle='rgba(176,96,255,0.25)';c.lineWidth=1.5;
+    trail.forEach((pt,ti)=>{
+      const p=w2s(pt.x,pt.z);
+      if(ti===0)c.moveTo(p.x,p.y);else c.lineTo(p.x,p.y);
+    });
+    c.stroke();
+  });
+  Object.entries(D.bots).forEach(([i,b])=>{
+    if(!b.position)return;const p=w2s(b.position.x,b.position.z);
+    c.beginPath();c.arc(p.x,p.y,7,0,Math.PI*2);c.fillStyle='#2a1040';c.fill();c.strokeStyle='#b060ff';c.lineWidth=2;c.stroke();
+    c.fillStyle='#fff';c.font='bold 8px JetBrains Mono';c.textAlign='center';c.fillText(i,p.x,p.y+3);
+  });
+}
+
+// --- Spawners (sortable/filterable) ---
+function sortSpawners(f){spSort.dir=spSort.field===f?-spSort.dir:1;spSort.field=f;renderSpawners();}
+function renderSpawners(){
+  const tb=document.getElementById('spawnerTbl');
+  const search=(document.getElementById('spFilter')?.value||'').toLowerCase();
+  const statusF=document.getElementById('spStatusFilter')?.value||'';
+  const typeF=document.getElementById('spTypeFilter')?.value||'';
+  let list=D.spawners;
+  if(search)list=list.filter(s=>`${s.x},${s.y},${s.z},${s.type||''}`.includes(search));
+  if(statusF)list=list.filter(s=>s.status===statusF);
+  if(typeF)list=list.filter(s=>(s.type||'unknown')===typeF);
+  list.sort((a,b)=>{const av=a[spSort.field]??0,bv=b[spSort.field]??0;return(typeof av==='string'?av.localeCompare(bv):av-bv)*spSort.dir;});
+  if(!list.length){tb.innerHTML='<tr><td colspan="8" style="color:var(--text2);text-align:center;padding:20px">No spawners found</td></tr>';return;}
+  tb.innerHTML=list.map(s=>{
+    const t=s.foundAt?new Date(s.foundAt).toLocaleTimeString():'?';
+    return`<tr><td><span class="tag ${s.status}">${s.status}</span></td><td><span class="type-tag">${s.type||'unknown'}</span></td><td style="font-family:JetBrains Mono">${s.x}</td><td style="font-family:JetBrains Mono">${s.y}</td><td style="font-family:JetBrains Mono">${s.z}</td><td>Bot-${String(s.foundBy??'?').padStart(2,'0')}</td><td>${t}</td><td><button class="btn sm" onclick="mapS.cx=${s.x};mapS.cz=${s.z};mapS.sc=4;showPage('map')">Map</button></td></tr>`;
+  }).join('');
+}
+function exportCSV(){window.open('/api/export/csv','_blank');}
+function exportJSON(){const a=document.createElement('a');a.href='/api/export';a.download='spawners.json';a.click();}
+
+// --- Economy ---
+function renderEcon(){
+  const bots=Object.entries(D.bots);const bal=bots.reduce((s,[_,b])=>s+(b.balance||0),0);
+  const sp=bots.reduce((s,[_,b])=>s+(b.spawnerCount||0),0);
+  document.getElementById('econStats').innerHTML=[sc('Total Balance','$'+bal.toLocaleString(),'c-yellow'),sc('Mined',D.stats.mined||0,'c-green'),sc('Total Found',D.stats.found||0,'c-blue'),sc('Spawners Held',sp,'c-purple')].join('');
+  document.getElementById('econCards').innerHTML=bots.map(([i,b])=>`<div class="bot-card"><div class="bot-head"><div class="bot-name">${b.username||'Bot-'+i}</div><span style="color:var(--yellow);font-weight:700;font-family:JetBrains Mono">$${(b.balance||0).toLocaleString()}</span></div><div class="bot-meta">Spawners: <b style="color:var(--purple)">${b.spawnerCount||0}</b> | XP: <b>Lv${b.xpLevel||0}</b></div><div class="btns"><button class="btn go" onclick="botCmd(${i},'daily')">Daily</button><button class="btn" onclick="botCmd(${i},'buy/pickaxe')">Pickaxe</button><button class="btn" onclick="botCmd(${i},'buy/steak',{count:10})">10x Steak</button><button class="btn" onclick="botCmd(${i},'buy/totem')">Totem</button></div></div>`).join('');
+}
+
+// --- Config ---
+function renderCfg(){
+  const c=D.config;if(!c.server){document.getElementById('cfgForm').innerHTML='<p style="color:var(--text2)">Loading...</p>';return;}
+  const sh=c.spawnerHunting||{},dl=c.delays||{},sv=c.survival||{},ec=c.economy||{},sh2=c.shop||{},wh=c.webhooks||{};
+  document.getElementById('cfgForm').innerHTML=`
+    <div class="cfg-section">Server</div>
+    <div class="field"><label>Host</label><input id="c-host" value="${c.server.host||''}"></div>
+    <div class="field"><label>Port</label><input id="c-port" type="number" value="${c.server.port||25565}"></div>
+    <div class="field"><label>Version</label><input id="c-ver" value="${c.server.version||'1.21.1'}"></div>
+    <div class="field"><label>Queue Timeout (ms)</label><input id="c-qt" type="number" value="${c.server.queueTimeoutMs||300000}"></div>
+    <div class="field"><label>Server Password</label><input id="c-pw" value="${c.server.password||''}" placeholder="Login/register password"></div>
+    <div class="field"><label>Auth Mode</label><select id="c-auth"><option value="offline" ${c.authMode==='offline'?'selected':''}>Offline</option><option value="microsoft" ${c.authMode==='microsoft'?'selected':''}>Microsoft</option></select></div>
+    <div class="field"><label>Bot Count</label><input id="c-cnt" type="number" value="${c.botCount||3}"></div>
+    <div class="field"><label>Web Port</label><input id="c-wp" type="number" value="${c.webPort||3000}"></div>
+    <div class="field"><label>Web Password</label><input id="c-wpass" value="${c.webPassword||''}" placeholder="Leave empty for no auth"></div>
+    <div class="cfg-section">Economy</div>
+    <div class="field"><label>Pickaxe Cost</label><input id="c-pc" type="number" value="${ec.pickaxeCost||700}"></div>
+    <div class="field"><label>Steak Cost</label><input id="c-sc2" type="number" value="${ec.steakCost||30}"></div>
+    <div class="field"><label>Totem Cost</label><input id="c-tc" type="number" value="${ec.totemCost||2500}"></div>
+    <div class="cfg-section">Shop Slots</div>
+    <div class="field"><label>Pickaxe Path</label><input id="c-sp" value="${(sh2.pickaxeSlots||[]).join(', ')}"></div>
+    <div class="field"><label>Steak Path</label><input id="c-ss" value="${(sh2.steakSlots||[]).join(', ')}"></div>
+    <div class="field"><label>Totem Path</label><input id="c-st" value="${(sh2.totemSlots||[]).join(', ')}"></div>
+    <div class="cfg-section">Hunting</div>
+    <div class="field"><label>Search Radius</label><input id="c-sr" type="number" value="${sh.searchRadius||2000}"></div>
+    <div class="field"><label>Scan Distance</label><input id="c-sd2" type="number" value="${sh.maxDistanceToSpawner||128}"></div>
+    <div class="field"><label>Max Spawner Stacks Per Bot</label><input id="c-ms" type="number" value="${sh.maxSpawnerStacksPerBot??2}" min="0"></div>
+    <div class="field"><label>Cycle On Full</label><select id="c-cf"><option value="true" ${sh.cycleOnFull!==false?'selected':''}>Yes</option><option value="false" ${sh.cycleOnFull===false?'selected':''}>No</option></select></div>
+    <div class="cfg-section">Delays</div>
+    <div class="field"><label>Spawn Delay (ms)</label><input id="c-d1" type="number" value="${dl.botSpawnDelayMs||5000}"></div>
+    <div class="field"><label>Reconnect Delay (ms)</label><input id="c-d2" type="number" value="${dl.reconnectDelayMs||30000}"></div>
+    <div class="cfg-section">Survival</div>
+    <div class="field"><label>Min Health</label><input id="c-mh" type="number" value="${sv.minHealth||8}"></div>
+    <div class="field"><label>Min Food</label><input id="c-mf" type="number" value="${sv.minFood||12}"></div>
+    <div class="field"><label>Auto Eat</label><select id="c-ae"><option value="true" ${sv.autoEat!==false?'selected':''}>Yes</option><option value="false" ${sv.autoEat===false?'selected':''}>No</option></select></div>
+    <div class="field"><label>Avoid Players</label><select id="c-ap"><option value="true" ${sv.avoidPlayers!==false?'selected':''}>Yes</option><option value="false" ${sv.avoidPlayers===false?'selected':''}>No</option></select></div>
+    <div class="field"><label>Player Avoid Radius</label><input id="c-pr" type="number" value="${sv.playerAvoidRadius||30}"></div>
+    <div class="field"><label>Self Defense</label><select id="c-sdef"><option value="true" ${sv.selfDefense!==false?'selected':''}>Yes</option><option value="false" ${sv.selfDefense===false?'selected':''}>No</option></select></div>
+    <div class="field"><label>AFK Interval (ms)</label><input id="c-ai" type="number" value="${sv.afkIntervalMs||240000}"></div>
+    <div class="field"><label>Stuck Threshold (ticks)</label><input id="c-st2" type="number" value="${sv.stuckThresholdTicks||30}"></div>
+    <div class="cfg-section">Webhooks</div>
+    <div class="field"><label>Discord Webhook URL</label><input id="c-wh" value="${wh.discordUrl||''}"></div>
+    <div class="field"><label>Notify on Cycle</label><select id="c-nc"><option value="true" ${wh.notifyOnCycle!==false?'selected':''}>Yes</option><option value="false" ${wh.notifyOnCycle===false?'selected':''}>No</option></select></div>
+    <div class="field"><label>Notify on Death</label><select id="c-nd"><option value="true" ${wh.notifyOnDeath?'selected':''}>Yes</option><option value="false" ${wh.notifyOnDeath!==true?'selected':''}>No</option></select></div>
+    <div class="field"><label>Notify on Kick</label><select id="c-nk"><option value="true" ${wh.notifyOnKick!==false?'selected':''}>Yes</option><option value="false" ${wh.notifyOnKick===false?'selected':''}>No</option></select></div>
+    <div class="cfg-section">Coordination</div>
+    <div class="field"><label>TPA Between Bots</label><select id="c-tpa"><option value="true" ${(c.coordination||{}).tpaBetweenBots!==false?'selected':''}>Yes</option><option value="false" ${(c.coordination||{}).tpaBetweenBots===false?'selected':''}>No</option></select></div>
+    <div class="cfg-section">Per-Bot Overrides</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">JSON overrides applied to specific bot indices. Key is bot index, value is config to merge.</div>
+    <div class="field"><label>Bot Overrides (JSON)</label><textarea id="c-overrides" rows="4" style="width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'JetBrains Mono';font-size:11px;resize:vertical">${JSON.stringify(c.botOverrides||{},null,2)}</textarea></div>
+    <button class="btn primary" onclick="saveCfg()" style="margin-top:16px">Save Configuration</button>`;
+}
+function parseSlots(id){const v=$(id);return v?v.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)):[];}
+async function saveCfg(){
+  let botOverrides={};
+  try{botOverrides=JSON.parse(document.getElementById('c-overrides')?.value||'{}');}catch{}
+  await api('config','POST',{
+    server:{host:$('c-host'),port:+$('c-port'),version:$('c-ver'),queueTimeoutMs:+$('c-qt'),password:$('c-pw')},
+    botCount:+$('c-cnt'),authMode:$('c-auth'),webPort:+$('c-wp'),webPassword:$('c-wpass'),
+    economy:{pickaxeCost:+$('c-pc'),steakCost:+$('c-sc2'),totemCost:+$('c-tc')},
+    shop:{pickaxeSlots:parseSlots('c-sp'),steakSlots:parseSlots('c-ss'),totemSlots:parseSlots('c-st'),settingsMobSlot:23,dailyClaimSlot:1,rtpSlot:11},
+    spawnerHunting:{searchRadius:+$('c-sr'),maxDistanceToSpawner:+$('c-sd2'),maxSpawnerStacksPerBot:+$('c-ms'),cycleOnFull:$('c-cf')==='true'},
+    delays:{botSpawnDelayMs:+$('c-d1'),reconnectDelayMs:+$('c-d2')},
+    survival:{minHealth:+$('c-mh'),minFood:+$('c-mf'),autoEat:$('c-ae')==='true',avoidPlayers:$('c-ap')==='true',playerAvoidRadius:+$('c-pr'),selfDefense:$('c-sdef')==='true',afkIntervalMs:+$('c-ai'),stuckThresholdTicks:+$('c-st2')},
+    webhooks:{discordUrl:$('c-wh'),notifyOnCycle:$('c-nc')==='true',notifyOnDeath:$('c-nd')==='true',notifyOnKick:$('c-nk')==='true'},
+    coordination:{tpaBetweenBots:$('c-tpa')==='true'},
+    botOverrides,
+  });showToast('Config saved and applied','success');
+}
+function $(id){return document.getElementById(id)?.value||'';}
+
+// --- Logs ---
+let logBot='all';
+function renderLogs(){
+  const bots=Object.entries(D.bots);const tabs=document.getElementById('logTabs');
+  let th=`<div class="tab ${logBot==='all'?'active':''}" onclick="setLog('all')">All</div>`;
+  bots.forEach(([i])=>{th+=`<div class="tab ${logBot===i?'active':''}" onclick="setLog('${i}')">Bot-${i}</div>`;});
+  tabs.innerHTML=th;
+  api('logs/'+logBot).then(logs=>{const box=document.getElementById('logBox');box.innerHTML=(logs||[]).map(l=>`<div class="log-line ${l.level||'info'}">${l.time||''} ${l.bot?'[Bot-'+l.bot+']':''} ${l.msg||l}</div>`).join('')||'<div class="log-line" style="color:var(--text3)">No logs</div>';box.scrollTop=box.scrollHeight;});
+}
+function setLog(i){logBot=i;renderLogs();}
+
+// --- Init ---
+initMap();initSSE();
+window.addEventListener('resize',()=>{if(page==='map')resizeMap();});
+function showToast(msg,level='info'){
+  const el=document.createElement('div');el.className='toast '+level;el.textContent=msg;
+  const c=document.getElementById('toasts');c.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},5000);
+  // Play notification sound for important events
+  if(level==='error'||level==='warn')playNotificationSound(level==='error'?'alert':'warn');
+}
+
+// --- Notification Sounds ---
+let audioCtx=null;
+function playNotificationSound(type='alert'){
+  try{
+    if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();
+    osc.connect(gain);gain.connect(audioCtx.destination);
+    gain.gain.value=0.15;
+    if(type==='alert'){
+      osc.frequency.value=880;osc.type='square';
+      osc.start();osc.stop(audioCtx.currentTime+0.15);
+      setTimeout(()=>{const o2=audioCtx.createOscillator();const g2=audioCtx.createGain();o2.connect(g2);g2.connect(audioCtx.destination);g2.gain.value=0.15;o2.frequency.value=660;o2.type='square';o2.start();o2.stop(audioCtx.currentTime+0.2);},200);
+    }else{
+      osc.frequency.value=520;osc.type='sine';
+      osc.start();osc.stop(audioCtx.currentTime+0.1);
+    }
+  }catch{}
+}
+
+// --- Accounts ---
+let accounts=[];
+function renderAccounts(){
+  const tb=document.getElementById('accountsTbl');if(!tb)return;
+  if(!accounts.length){tb.innerHTML='<tr><td colspan="4" style="color:var(--text2);text-align:center;padding:20px">No accounts configured</td></tr>';return;}
+  tb.innerHTML=accounts.map((a,i)=>`<tr><td>${i+1}</td><td><input value="${a.email||''}" onchange="accounts[${i}].email=this.value" style="width:100%;background:transparent;border:none;color:var(--text);font-family:'JetBrains Mono';font-size:11px;outline:none"></td><td><input type="password" value="${a.password||''}" onchange="accounts[${i}].password=this.value" style="width:100%;background:transparent;border:none;color:var(--text);font-family:'JetBrains Mono';font-size:11px;outline:none"></td><td><button class="btn danger sm" onclick="accounts.splice(${i},1);renderAccounts()">X</button></td></tr>`).join('');
+}
+function addAccount(){accounts.push({email:'',password:''});renderAccounts();}
+async function saveAccounts(){await api('accounts','POST',accounts);showToast('Accounts saved','success');}
+
+// --- Scheduler & Metrics ---
+function renderScheduler(){
+  if(page!=='scheduler')return;
+  // Scheduler info
+  api('scheduler').then(data=>{
+    const el=document.getElementById('schedulerInfo');if(!el)return;
+    if(!data||!data.currentRisk){el.textContent='Scheduler not active';return;}
+    const colors={safe:'var(--green)',normal:'var(--blue)',cautious:'var(--yellow)',dangerous:'var(--red)'};
+    let h=`<div style="margin-bottom:8px">Risk: <b style="color:${colors[data.currentRisk]||'var(--text)'}">${data.currentRisk.toUpperCase()}</b> | Intensity: <b>${(data.intensity*100).toFixed(0)}%</b></div>`;
+    if(data.forecast?.length){
+      h+=`<div style="color:var(--text3);font-size:9px;margin-top:6px">Forecast:</div>`;
+      h+=data.forecast.map(f=>`<div style="display:flex;gap:8px"><span style="color:var(--text3)">${String(f.hour).padStart(2,'0')}:00</span><span>players: ${f.avgPlayers??'?'}</span><span style="color:${f.staffRisk?'var(--red)':'var(--green)'}">${f.staffRisk?'STAFF':'clear'}</span></div>`).join('');
+    }
+    el.innerHTML=h;
+  });
+  // Leaderboard
+  api('metrics').then(data=>{
+    const el=document.getElementById('leaderboard');if(!el)return;
+    const lb=data?.leaderboard||[];
+    if(!lb.length){el.textContent='No metrics yet';return;}
+    el.innerHTML=lb.map((b,i)=>`<div style="display:flex;gap:10px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);min-width:20px">#${i+1}</span><span style="color:var(--cyan)">Bot-${b.index}</span><span style="color:var(--green)">${b.spawnersPerHour}/hr</span><span style="color:var(--text3)">${b.distancePerHour}blk/hr</span><span style="color:var(--yellow)">eff:${b.efficiency}%</span></div>`).join('');
+  });
+  // Proxy health
+  api('proxies/health').then(data=>{
+    const el=document.getElementById('proxyHealth');
+    if(!el)return;
+    const h=data?.health||{};
+    const entries=Object.entries(h);
+    if(!entries.length){el.textContent='No proxies configured';return;}
+    el.innerHTML=entries.map(([key,v])=>{
+      const alive=v.failures===0||v.successes>v.failures;
+      return `<div style="display:flex;gap:10px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:${alive?'var(--green)':'var(--red)'}">${alive?'OK':'FAIL'}</span><span style="color:var(--text)">${key}</span><span style="color:var(--green)">+${v.successes}</span><span style="color:var(--red)">-${v.failures}</span>${v.latencyMs?`<span style="color:var(--yellow)">${v.latencyMs}ms</span>`:''}</div>`;
+    }).join('');
+  });
+  // Scheduled commands
+  api('schedules').then(data=>{
+    const el=document.getElementById('schedulesList');if(!el)return;
+    const scheds=data?.schedules||[];
+    if(!scheds.length){el.innerHTML='<div style="color:var(--text3)">No scheduled commands</div>';return;}
+    el.innerHTML=scheds.map(s=>`<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-family:'JetBrains Mono';color:var(--cyan);font-size:10px">${s.cron}</span><span style="color:var(--text)">${s.command}</span><span style="color:var(--text3)">${s.botIndex!=null?'Bot-'+s.botIndex:'All'}</span><span style="color:${s.enabled?'var(--green)':'var(--text3)'}">${s.enabled?'ON':'OFF'}</span><button class="btn sm" onclick="toggleSchedule(${s.id})">${s.enabled?'Disable':'Enable'}</button><button class="btn danger sm" onclick="removeSchedule(${s.id})">X</button></div>`).join('');
+  });
+  // Update bot selector
+  const sel=document.getElementById('schedBot');
+  const curSel=sel?.value;
+  const bots=Object.entries(D.bots);
+  sel.innerHTML='<option value="">All Bots</option>'+bots.map(([i])=>`<option value="${i}">Bot-${i}</option>`).join('');
+  if(curSel!==undefined)sel.value=curSel;
+}
+async function testProxies(){
+  showToast('Testing proxies...','info');
+  const data=await api('proxies/test','POST');
+  const results=data?.results||[];
+  const alive=results.filter(r=>r.alive).length;
+  showToast(`Proxy test done: ${alive}/${results.length} alive`,alive===results.length?'success':'warn');
+  renderScheduler();
+}
+async function addSchedule(){
+  const cron=document.getElementById('schedCron')?.value;
+  const cmd=document.getElementById('schedCmd')?.value;
+  const bot=document.getElementById('schedBot')?.value;
+  if(!cron||!cmd){showToast('Cron and command required','warn');return;}
+  await api('schedules','POST',{cron,command:cmd,botIndex:bot?parseInt(bot):null});
+  showToast('Schedule added','success');
+  renderScheduler();
+}
+async function removeSchedule(id){await api('schedules/'+id,'DELETE');renderScheduler();}
+async function toggleSchedule(id){await api('schedules/'+id+'/toggle','POST');renderScheduler();}
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+{
+  "name": "Lifesteal Server (Default)",
+  "version": "1.21.1",
+  "description": "Profile for cracked lifesteal server with /shop, /daily, /rtp, /queue",
+
+  "login": {
+    "detect_pattern": "/login|/l |please login|log in with",
+    "command": "/l {password}",
+    "success_pattern": "successfully|logged in|welcome back|you have been logged in",
+    "proactive_delay_ms": 3000
+  },
+
+  "register": {
+    "detect_pattern": "/register|/r |please register|register with",
+    "command": "/r {password} {password}",
+    "success_pattern": "successfully|registered|you have been logged in"
+  },
+
+  "startup_sequence": [
+    {
+      "type": "chat",
+      "command": "/queue lifesteal",
+      "comment": "Queue into the lifesteal gamemode"
+    },
+    {
+      "type": "wait_for_chat",
+      "pattern": "teleported|joined lifesteal|welcome to|entered",
+      "timeout": 300000
+    },
+    {
+      "type": "gui_click",
+      "command": "/rtp",
+      "slot": 11,
+      "wait_for_window": true,
+      "wait_for_teleport": true,
+      "teleport_distance": 50,
+      "teleport_timeout": 15000
+    },
+    {
+      "type": "chat",
+      "command": "/sethome",
+      "comment": "Save RTP location as home"
+    },
+    {
+      "type": "wait",
+      "ms": 1000
+    },
+    {
+      "type": "gui_click",
+      "command": "/settings",
+      "slot": 23,
+      "wait_for_window": true,
+      "optional": true
+    },
+    {
+      "type": "gui_click",
+      "command": "/daily",
+      "slot": 1,
+      "wait_for_window": true,
+      "optional": true
+    }
+  ],
+
+  "death_recovery_sequence": [
+    {
+      "type": "wait",
+      "ms": 2000
+    },
+    {
+      "type": "chat",
+      "command": "/home",
+      "comment": "Return to hunting area after death"
+    },
+    {
+      "type": "wait",
+      "ms": 3000
+    }
+  ],
+
+  "shopping": {
+    "open_command": "/shop",
+    "auto_explore": true,
+    "items": {
+      "pickaxe": {
+        "keywords": ["diamond_pickaxe", "pickaxe"],
+        "max_price": 700,
+        "priority": 1
+      },
+      "steak": {
+        "keywords": ["cooked_beef", "steak", "cooked_porkchop"],
+        "max_price": 30,
+        "default_quantity": 64,
+        "min_quantity": 10,
+        "priority": 2
+      },
+      "totem": {
+        "keywords": ["totem_of_undying", "totem"],
+        "max_price": 2500,
+        "priority": 3
+      }
+    }
+  },
+
+  "commands": {
+    "sell": "/sellgui",
+    "disposal": "/disposal",
+    "home": "/home",
+    "sethome": "/sethome",
+    "balance": "/bal",
+    "rtp": "/rtp",
+    "rtp_slot": 11,
+    "daily": "/daily",
+    "daily_slot": 1,
+    "settings": "/settings",
+    "settings_slot": 23,
+    "tpa": "/tpa",
+    "tpaccept": "/tpaccept",
+    "queue": "/queue lifesteal"
+  },
+
+  "survival": {
+    "dangerous_blocks": ["lava", "fire", "cactus", "sweet_berry_bush", "wither_rose"],
+    "min_y": -60,
+    "avoid_player_logout_ms": 7200000,
+    "flee_mob_distance": 8,
+    "fight_back_health": 5,
+    "fight_back_distance": 2
+  }
+}
