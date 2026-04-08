@@ -1,5 +1,4 @@
 const { SocksClient } = require('socks');
-const mc = require('minecraft-protocol');
 const mineflayer = require('mineflayer');
 const pathfinder = require('mineflayer-pathfinder').pathfinder;
 const collectblock = require('mineflayer-collectblock');
@@ -33,17 +32,13 @@ async function createProxiedBot({ proxy, server, credentials, version, log }) {
 
   const { socket } = await Promise.race([connectPromise, timeoutPromise]);
 
-  const mcClient = mc.createClient({
+  const bot = mineflayer.createBot({
     stream: socket,
+    host: server.host,
+    port: server.port,
     username: credentials.username,
     password: credentials.password,
     auth: credentials.auth,
-    version,
-  });
-
-  const bot = mineflayer.createBot({
-    client: mcClient,
-    username: credentials.username,
     version,
   });
 
