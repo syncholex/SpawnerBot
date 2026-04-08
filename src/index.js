@@ -361,8 +361,9 @@ async function startHostBot(hostSlot, username) {
     });
 
     bot.on('kicked', (reason) => {
-      log.warn(`HOST kicked: ${reason}`);
-      addLog(hostSlot, 'warn', `HOST kicked: ${reason}`);
+      const reasonStr = typeof reason === 'string' ? reason : (reason?.toString?.() || JSON.stringify(reason));
+      log.warn(`HOST kicked: ${reasonStr}`);
+      addLog(hostSlot, 'warn', `HOST kicked: ${reasonStr}`);
       recordProxyFailure(proxy);
       clearInterval(instance.statusInterval);
       cleanupBot(hostSlot);
@@ -623,13 +624,14 @@ async function startBot(index, username) {
     });
 
     bot.on('kicked', (reason) => {
-      log.warn(`Kicked: ${reason}`);
-      addLog(index, 'warn', `Kicked: ${reason}`);
+      const reasonStr = typeof reason === 'string' ? reason : (reason?.toString?.() || JSON.stringify(reason));
+      log.warn(`Kicked: ${reasonStr}`);
+      addLog(index, 'warn', `Kicked: ${reasonStr}`);
       recordProxyFailure(proxy);
       setBotStatus(String(index), { username: creds.username, status: 'kicked', position: null, stats: hunter.getStats() });
       clearInterval(instance.statusInterval);
       cleanupBot(index);
-      sendWebhook('kick', `Bot-${index} (${creds.username}) kicked: ${reason}`);
+      sendWebhook('kick', `Bot-${index} (${creds.username}) kicked: ${reasonStr}`);
 
       // Parse disconnect reason
       const parsed = parseKickReason(reason);
