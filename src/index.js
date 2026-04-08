@@ -686,7 +686,8 @@ async function startBot(index, username) {
 }
 
 function parseKickReason(reason) {
-  const lower = (reason || '').toLowerCase();
+  const str = typeof reason === 'string' ? reason : JSON.stringify(reason);
+  const lower = (str || '').toLowerCase();
   return {
     isBanned: lower.includes('ban') || lower.includes('banned') || lower.includes('blacklisted'),
     isRestart: lower.includes('restart') || lower.includes('restarting') || lower.includes('server full') || lower.includes('server is starting'),
