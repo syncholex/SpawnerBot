@@ -1,141 +1,171 @@
 # MCBOT Feature List
 
-## Scripting Agent (Server-Agnostic System)
-
-### Server Profiles (`serverProfiles/`)
-- **JSON-driven server profiles**: Define all server-specific behavior in a profile file
-- **Login/register patterns**: Configurable detect patterns, commands, success patterns
-- **Startup sequences**: Array of actions (chat, gui_click, wait_for_chat, wait_for_teleport, etc.)
-- **Death recovery sequences**: Per-server respawn behavior
-- **Shopping config**: Item keywords, max prices, priorities, quantities
-- **Command mappings**: Map `/bal`, `/home`, `/sell` etc. for any server
-- **Survival params**: Configurable dangerous blocks, avoid distances, fight thresholds
-- **Example profiles**: Default lifesteal profile + generic SMP example
-
-### Script Engine (`src/scriptEngine.js`)
-- **18 action types**: chat, gui_click, gui_click_item, gui_close, wait, wait_for_chat, wait_for_teleport, wait_for_window, detect_and_respond, if_has_item, if_balance, if_chat_matches, set_variable, try/catch, retry, log, sequence, generic action dispatch
-- **Variable interpolation**: `{password}`, `{balance}`, custom vars in all commands
-- **Conditional branching**: if_has_item, if_balance, if_chat_matches with then/else blocks
-- **Error handling**: try/catch blocks, optional actions, retry support
-- **Composable**: Sequences can nest sequences
-
-### Shop Explorer (`src/shopExplorer.js`)
-- **Recursive GUI mapping**: Opens shop, clicks into every slot, discovers sub-categories
-- **Item metadata extraction**: Names, display names, lore text, NBT data
-- **Price parsing**: Extracts prices from lore (dollar amounts, "Price: X", "Cost: X")
-- **Searchable database**: Find items by keyword across all categories
-- **Dynamic buying**: Navigate to item using discovered path instead of hardcoded slots
-- **Fallback**: Gracefully falls back to configured slot paths if exploration fails
-- **Web API**: `/api/shop-map` to view data, `/api/bot/:index/explore-shop` to trigger
-
 ## Core System
-- **Multi-bot architecture**: Run N bots simultaneously, each on its own slot index
-- **Offline (cracked) + Microsoft auth**: Configurable auth mode per deployment
-- **SOCKS5 proxy support**: Assign proxies round-robin to avoid IP bans (`proxies.txt`)
-- **Unique deterministic passwords**: SHA-256 hash per username so login/register is consistent across reconnects
-- **Realistic username generation**: Markov-chain style names (adjective+noun, prefix+name, l33t speak, etc.)
-- **Graceful shutdown**: SIGINT/SIGTERM handler saves state and disconnects all bots cleanly
+- [x] Multi-bot architecture with configurable bot count
+- [x] Offline (cracked) and Microsoft authentication support
+- [x] SOCKS5 proxy support with round-robin assignment
+- [x] Realistic username generation (Markov chain + pattern mixing)
+- [x] Unique deterministic passwords per bot via SHA-256
+- [x] Graceful shutdown with state persistence
+- [x] Auto-start on launch (`config.autoStart`)
+- [x] Per-bot config overrides (`config.botOverrides`)
+- [x] Shared utility module (`src/shared.js`)
 
-## Server Integration (serverManager.js)
-- **Auto login/register**: Detects login/register prompts, sends `/l <pass>` or `/r <pass> <pass>`
-- **Server queue**: Sends `/queue lifesteal`, detects teleport into game world via position change + chat
-- **Random teleport (RTP)**: Opens `/rtp` GUI, clicks configured slot, waits for position change
-- **Settings**: Applies `/settings` mob spawn disable via GUI click
-- **Daily reward**: Claims `/daily` reward via GUI click
-- **Set home / Go home**: `/sethome` after RTP, `/home` to return
+## Server Integration
+- [x] Auto login/register with prompt detection
+- [x] Server queue handling (`/queue lifesteal`) with position change detection
+- [x] Random teleport via GUI interaction (`/rtp`)
+- [x] Settings application (disable mob spawning)
+- [x] Daily reward claiming via GUI
+- [x] `/sethome` and `/home` support
+- [x] Server profile system (`serverProfiles/*.json`)
+- [x] Script engine for generic action execution
+- [x] Profile-driven startup and death recovery sequences
+- [x] Command rate limiter (`src/commandQueue.js`)
 
-## Economy (economy.js)
-- **Balance tracking**: Parses `/bal` chat output and scoreboard updates
-- **Shop purchases**: Multi-slot click path through `/shop` GUI (pickaxe, steak, totem)
-- **Balance verification**: Refreshes balance before and after purchases
-- **Cost checks**: Skips purchases if balance is insufficient
+## Economy
+- [x] Balance tracking from `/bal` chat output
+- [x] Scoreboard balance parsing
+- [x] Shop GUI navigation for purchases (pickaxe, steak, totem)
+- [x] Dynamic shop exploration and item mapping
+- [x] Shop map persistence to disk
+- [x] Balance verification before and after purchases
+- [x] Dynamic autobuy via shop explorer with fallback to hardcoded slots
 
-## Smart Inventory (smartInventory.js)
-- **Item categorization**: Keep (spawners, tools, armor, food, totems, ender pearls, building blocks), Sell (everything else)
-- **Sell via `/sellgui`**: Shift-clicks items into sell GUI, falls back to `/disposal` if sell fails
-- **Disposal via `/disposal`**: Disposes of unsellable overflow items
-- **Totem offhand**: Automatically equips totem in off-hand slot
-- **Essentials auto-buy**: Buys pickaxe, food, totem when missing during inventory management
-- **Building block cap**: Keeps up to 192 building blocks, sells excess
+## Inventory Management
+- [x] Smart item categorization (keep tools/armor/food/spawners, sell/dispose rest)
+- [x] `/sellgui` integration for selling junk items
+- [x] `/disposal` fallback for unsellable items
+- [x] Automatic totem equipping in offhand
+- [x] Essentials auto-buy (pickaxe, food, totem)
+- [x] Inventory full detection (>= 35 slots)
+- [x] Building block limit (max 192 kept)
 
-## Spawner Hunting (spawnerHunter.js)
-- **Block scanning**: Uses `bot.findBlocks()` to locate spawner blocks within configurable distance
-- **Spawner type detection**: Reads block entity NBT data to identify mob type (zombie, skeleton, blaze, etc.)
-- **Pathfinding navigation**: Uses mineflayer-pathfinder GoalBlock to navigate to spawners
-- **Auto-mine via collectblock**: Uses mineflayer-collectblock plugin to mine spawners
-- **Sector-based exploration**: Each bot explores a different angular sector of the search area
-- **Human-like movement**: Varied step sizes (20-40 blocks), random pauses, occasional camera rotation
-- **Underground chunk loading**: Periodically digs down to load sub-surface chunks for scanning
-- **Per-type capacity tracking**: Tracks spawner counts; cycles bot out when capacity reached
-- **Auto-cycler**: When spawner capacity full, disconnects bot and spawns replacement with fresh username
+## Spawner Hunting
+- [x] Block scanning via `bot.findBlocks()` within configurable radius
+- [x] Spawner type detection from block entity NBT
+- [x] Pathfinding navigation to spawner locations
+- [x] Auto-mine via mineflayer-collectblock
+- [x] Sector-based exploration with human-like movement
+- [x] Underground chunk loading via periodic digging
+- [x] Spawner capacity tracking with auto-cycle when full
+- [x] Replacement bot spawning on cycle
+- [x] Death rate limiting (5 deaths in 10 min stops bot)
+- [x] Density-based exploration bias toward spawner-rich areas
 
-## Survival (botSurvival.js)
-- **Health/food monitoring**: Polls every 3s, auto-eats when food or health drops below threshold
-- **Anti-AFK**: Random camera rotation + arm swing on configurable interval
-- **Stuck detection**: Tracks position delta, triggers recovery if stuck for N ticks
-- **Stuck recovery**: Jumps, walks forward, then pathfinds to random nearby position
-- **Player avoidance**: Detects real players within configurable radius, logs out for 2 hours
-- **Bot self-recognition**: Bots don't flee/logout when they see other bots (via global username registry)
-- **Spawn-area tolerance**: Skips player detection before first RTP completes (spawn is always crowded)
-- **Mob flee**: Runs away from hostile mobs within 8 blocks
-- **Cornered self-defense**: Only fights back if health < 5 AND mob within 2 blocks
-- **Dangerous block avoidance**: Checks for lava, fire, cactus, sweet berry bush, wither rose near targets
-- **XP tracking**: Listens for experience events, tracks level and progress
+## Survival
+- [x] Health/food monitoring with auto-eat
+- [x] Event-driven health updates with 10s polling fallback
+- [x] Anti-AFK via random camera movement + arm swing
+- [x] Stuck detection and recovery
+- [x] Player detection and avoidance (2-hour logout)
+- [x] First-RTP spawn tolerance (no avoidance until first RTP done)
+- [x] Hostile mob detection (30+ mob types) and flee behavior
+- [x] Self-defense only when cornered (health < 5, mob within 2 blocks)
+- [x] Dangerous block avoidance (lava, fire, cactus, etc.)
+- [x] XP tracking
 
-## Bot Coordination (botCoordinator.js)
-- **Global state sharing**: Shared cooldowns, positions, failure counts across all bots
-- **Daily cooldown**: 24h cooldown per bot, tracked globally
-- **RTP cooldown**: 5min cooldown per bot
-- **Failure monitoring**: Auto-stops bot after 5 consecutive failures
-- **TPA between bots**: Bots can `/tpa` to each other and auto-accept with human-like delay
-- **Position tracking**: Each bot reports its X/Z position for coordination
-- **Bot username registry**: Global set of active bot usernames for self-recognition
+## Bot Coordination
+- [x] Shared global state (cooldowns, positions, failures)
+- [x] Shared event bus for inter-bot messaging (`botEvents`)
+- [x] TPA between bots with auto-accept
+- [x] Daily (24h) and RTP (5min) cooldown tracking
+- [x] Failure monitoring (auto-stop after 5 consecutive failures)
+- [x] Bot-to-bot item lending via `/msg [bot-msg]` protocol
+- [x] Item transfer between bots via TPA + ground drop
+- [x] Bot proximity-based spacing (explorer nudges away)
+- [x] Global username registry (bots don't avoid each other)
 
-## State Persistence (spawnerStore.js)
-- **Spawner database**: Tracks every found/mined spawner with coords, type, status, timestamps
-- **Chunk tracking**: Records explored chunks to avoid redundant scanning
-- **Time-series data**: Snapshots every 60s (bots online, balance, found/mined counts) up to 24h
-- **Auto-save**: Saves to `data/` directory every 60s
-- **CSV/JSON export**: Export spawner data via API
+## Host Bot System
+- [x] Dedicated host bots that stay at `/home`
+- [x] 1 host per 10 hunters (configurable ratio)
+- [x] Auto-accept TPA from hunters
+- [x] Spawner pickup and tracking
+- [x] Shulker box storage pipeline (buy, place, fill, break, collect)
+- [x] Round-robin hunter-to-host assignment
+- [x] Host bot dashboard visibility with `[HOST]` tag
 
-## Web Dashboard (public/index.html)
-- **Dark-themed SPA**: Sidebar nav with 7 pages
-- **Dashboard**: Overview stats, spawner type breakdown, time-series chart, active bot cards
-- **Bot Control**: Start All/Stop All, generate usernames, start/stop individual bots, action buttons
-- **Spawner Map**: Canvas-based map with zoom/pan, spawner dots (red=found, green=mined), bot positions, explored chunk overlay
-- **Spawner Database**: Sortable/filterable table with search, status/type filters, "view on map" button
-- **Economy**: Balance overview, per-bot economy cards with quick buy buttons
-- **Config**: Editable form for all config sections, saves via API
-- **Logs**: Per-bot log viewer with tab selection, auto-scroll
-- **Inventory modal**: View bot inventory with durability bars and color-coded items
-- **Health/food bars**: Inline colored bars in bot cards
-- **SSE real-time updates**: Server-Sent Events push status changes without polling
-- **Optional password auth**: Login screen if `webPassword` is set
+## Anti-Detection
+- [x] Anti-detection module with humanized click/movement timing
+- [x] Anti-captcha detection (14 patterns across common plugins)
+- [x] Auto-respond to simple text captchas
+- [x] Staff player detection by display name keywords
+- [x] Global staff tracking across all bots
+- [x] Staff alert banner on dashboard
+- [x] Hunting loop variance (+/- 30% random sleep)
+- [x] Proper listener cleanup on bot stop
 
-## Web API (webServer.js)
-- **RESTful endpoints**: `/api/stats`, `/api/spawners`, `/api/bots`, `/api/config`, etc.
-- **Bot control**: POST endpoints for start/stop, daily, RTP, buy items, clean inventory, send commands
-- **SSE endpoint**: `/sse` for real-time status push
-- **CSV export**: `/api/export/csv` for spreadsheet import
-- **Rate limiting**: 150ms between requests per IP+path
-- **Password auth**: Bearer token or query param, GET exempted for SSE/static
+## State Persistence
+- [x] Spawner database with type, status, timestamps
+- [x] Explored chunk tracking (packed integer format)
+- [x] Time-series snapshots every 60s (24h retention)
+- [x] Auto-save to `data/` directory
+- [x] CSV and JSON export
+- [x] Shop map persistence
+- [x] Explorer state recovery (direction/distance saved to disk)
+- [x] Proxy assignment memory
+- [x] Smart scheduler state persistence
 
-## Webhooks & Notifications
-- **Discord webhooks**: Configurable URL for notifications
-- **Cycle notification**: Alerts when bot cycles out due to spawner capacity
-- **Death notification**: Alerts when bot dies (optional)
-- **Kick notification**: Alerts when bot is kicked with reason
+## Web Dashboard
+- [x] Dark-themed SPA with 9 pages (Dashboard, Bot Control, Map, Spawners, Economy, Config, Accounts, Scheduler, Logs)
+- [x] Canvas-based spawner map with zoom/pan/drag
+- [x] Bot position trails on map
+- [x] Sortable/filterable spawner table
+- [x] Time-series chart
+- [x] Bot control: start/stop, generate usernames, action buttons
+- [x] Inventory modal with durability bars
+- [x] Health/food bars in bot cards
+- [x] Host bot cards with storage stats
+- [x] SSE real-time updates with heartbeat
+- [x] Optional password authentication
+- [x] Rate limiting on API endpoints
+- [x] Path traversal protection on file-access endpoints
+- [x] Bulk bot actions (Daily All, RTP All, Clean Inv All)
+- [x] Notification toasts with sound effects
+- [x] Staff online alert banner
+- [x] Server chat relay
+- [x] Command history tracking
+- [x] Health check endpoint (`/api/health`)
 
-## Logging (logger.js)
-- **Winston-based**: Structured logging with timestamps
-- **Per-bot log files**: Each bot gets its own log file
-- **Console + file output**: Colorized console, plain text files
-- **Configurable level**: Set via config.json
+## Metrics & Scheduling
+- [x] Per-bot performance metrics (spawners/hr, distance/hr, efficiency)
+- [x] Performance leaderboard
+- [x] Efficiency calculation (1h and 24h rates)
+- [x] Smart scheduler with risk assessment
+- [x] Activity-based intensity adjustment
+- [x] Hourly activity patterns with persistence
+- [x] Cron-like scheduled commands
+- [x] Per-bot command targeting
+- [x] Scheduled command persistence to config
+- [x] Scheduled maintenance restarts with staggered timing
+- [x] Pause hours (stop bots during configured hours, auto-restart)
+
+## Notifications
+- [x] Discord webhook support
+- [x] Cycle, death, and kick notifications (configurable)
 
 ## Resilience
-- **Auto-reconnect**: Reconnects on disconnect with configurable delay
-- **Exponential backoff**: Not yet implemented (TODO)
-- **Banned detection**: Parses kick reasons, stops reconnecting if banned
-- **Server restart detection**: Faster 10s reconnect if server is restarting
-- **Player avoidance reconnect**: 2-hour delay when logging out due to real player detection
-- **Death recovery**: Re-equips and re-manages inventory after auto-respawn
+- [x] Auto-reconnect on disconnect
+- [x] Exponential backoff (30s → 60s → 120s → 300s cap)
+- [x] Banned detection (stops reconnecting)
+- [x] Server restart detection (faster 10s reconnect)
+- [x] Death recovery with re-equipping
+- [x] Kick reason parsing
+- [x] Proxy health tracking with auto-rotation
+- [x] Proxy connection timeout (30s)
+- [x] Double-cleanup guard (`cleanedUp` flag)
+- [x] Global unhandled exception/rejection handlers
+
+## Not Yet Implemented
+- [ ] WebSocket alternative to SSE for bidirectional communication
+- [ ] Metrics persistence across restarts
+- [ ] Spawner race lock to prevent duplicate mining
+- [ ] SSE endpoint auth protection
+- [ ] Proxy latency-based rotation
+- [ ] Account rotation
+- [ ] Tab list staff detection
+- [ ] Script pre-validation
+- [ ] Potion effect handling in movement
+- [ ] Custom username patterns
+- [ ] Structured JSON log output
+- [ ] Network latency metrics

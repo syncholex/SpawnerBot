@@ -35,8 +35,6 @@ async function createProxiedBot({ proxy, server, credentials, version, log }) {
 
   const mcClient = mc.createClient({
     stream: socket,
-    host: server.host,
-    port: server.port,
     username: credentials.username,
     password: credentials.password,
     auth: credentials.auth,
