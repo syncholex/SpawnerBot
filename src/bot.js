@@ -13,27 +13,22 @@ async function createBot({ proxy, server, credentials, version, log }) {
 async function createProxiedBot({ proxy, server, credentials, version, log }) {
   log.info(`Connecting via SOCKS5 proxy ${proxy.host}:${proxy.port}`);
 
-  const connectPromise = SocksClient.createConnection({
-    proxy: {
-      host: proxy.host,
-      port: proxy.port,
-      type: 5,
-      userId: proxy.userId,
-      password: proxy.password,
-    },
-    command: 'connect',
-    destination: { host: server.host, port: server.port },
-  });
-
-  // 30s connection timeout
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Proxy connection timeout (30s)')), 30000)
-  );
-
-  const { socket } = await Promise.race([connectPromise, timeoutPromise]);
-
   const bot = mineflayer.createBot({
-    stream: socket,
+    connect: async (client) => {
+      const { socket } = await SocksClient.createConnection({
+        proxy: {
+          host: proxy.host,
+          port: proxy.port,
+          type: 5,
+          userId: proxy.userId,
+          password: proxy.password,
+        },
+        command: 'connect',
+        destination: { host: server.host, port: server.port },
+      });
+      client.setSocket(socket);
+      client.emit('connect');
+    },
     host: server.host,
     port: server.port,
     username: credentials.username,
